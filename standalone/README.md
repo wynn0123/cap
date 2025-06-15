@@ -5,3 +5,4 @@
 3. 修改cdn地址
 4. assetsServer 返回时从缓存中读取
 5. assetsServer 增加浏览器的cache-control策略
+6. http cookie无法登录问题 secure:false

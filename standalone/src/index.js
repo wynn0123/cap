@@ -174,7 +174,7 @@ const auth = new Elysia({
     cookie["cap-admin-key"].set({
       value: await Bun.password.hash(body.password),
       httpOnly: true,
-      secure: true,
+      secure: false,
       sameSite: "lax",
       path: "/",
       maxAge: 86400 * 7,
