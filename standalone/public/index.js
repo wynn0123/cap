@@ -1,3 +1,4 @@
+const prefix = "/cap-api";
 const createKeyBtn = document.querySelector(".new-keys");
 
 createKeyBtn.addEventListener("click", async () => {
@@ -84,7 +85,7 @@ createKeyBtn.addEventListener("click", async () => {
     });
     createKeyBtn.innerText = "Creating key...";
     const { message, publicKey, privateKey } = await (
-      await fetch("/internal/createKey", {
+      await fetch(prefix+"/internal/createKey", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -133,7 +134,7 @@ createKeyBtn.addEventListener("click", async () => {
 });
 
 const reloadKeysList = async () => {
-  const { keys } = await (await fetch("/internal/listKeys")).json();
+  const { keys } = await (await fetch(prefix+"/internal/listKeys")).json();
 
   const keysEl = document.querySelector(".keys");
   if (!keys.length) {
@@ -237,7 +238,7 @@ const reloadKeysList = async () => {
 
         confirmDeleteBtn.addEventListener("click", async () => {
           confirmDeleteBtn.disabled = true;
-          await fetch("/internal/deleteKey", {
+          await fetch(prefix+"/internal/deleteKey", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -287,7 +288,7 @@ const reloadKeysList = async () => {
         confirmRotateBtn.addEventListener("click", async () => {
           confirmRotateBtn.disabled = true;
 
-          const { privateKey } = await (await fetch("/internal/rotateKey", {
+          const { privateKey } = await (await fetch(prefix+"/internal/rotateKey", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -375,7 +376,7 @@ const reloadKeysList = async () => {
         });
         createKeyBtn.innerText = "Saving changes...";
         const { message } = await (
-          await fetch("/internal/editKey", {
+          await fetch(prefix+"/internal/editKey", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

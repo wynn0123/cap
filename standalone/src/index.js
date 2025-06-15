@@ -8,6 +8,7 @@ import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 
+const prefix = "/cap-api";
 const ADMIN_KEY = process.env.ADMIN_KEY?.trim();
 const dataDir = "./.data";
 const keysStorePath = path.join(dataDir, "keys.json");
@@ -45,6 +46,7 @@ if (ADMIN_KEY.length < 20) {
 let keys = [];
 const capInstances = new Map();
 
+let [widgetSource, floatingSource, wasmSource, wasmLoaderSource] = [];
 const updateCache = async () => {
   let cacheConfig = {};
 
@@ -61,19 +63,19 @@ const updateCache = async () => {
   if (!(currentTime - lastUpdate > updateInterval)) return;
 
   try {
-    const [widgetSource, floatingSource, wasmSource, wasmLoaderSource] =
+    [widgetSource, floatingSource, wasmSource, wasmLoaderSource] =
       await Promise.all([
-        fetch("https://cdn.jsdelivr.net/npm/@cap.js/widget@latest").then((r) =>
+        fetch("https://fastly.jsdelivr.net/npm/@cap.js/widget@latest").then((r) =>
           r.text()
         ),
         fetch(
-          "https://cdn.jsdelivr.net/npm/@cap.js/widget/cap-floating.min.js"
+          "https://fastly.jsdelivr.net/npm/@cap.js/widget/cap-floating.min.js"
         ).then((r) => r.text()),
         fetch(
-          "https://cdn.jsdelivr.net/npm/@cap.js/wasm/browser/cap_wasm_bg.wasm"
+          "https://fastly.jsdelivr.net/npm/@cap.js/wasm/browser/cap_wasm_bg.wasm"
         ).then((r) => r.arrayBuffer()),
         fetch(
-          "https://cdn.jsdelivr.net/npm/@cap.js/wasm/browser/cap_wasm.min.js"
+          "https://fastly.jsdelivr.net/npm/@cap.js/wasm/browser/cap_wasm.min.js"
         ).then((r) => r.text()),
       ]);
 
@@ -153,16 +155,16 @@ const getCapInstance = (publicKey) => {
 const auth = new Elysia({
   prefix: "/internal/auth",
 })
-  .use(
-    rateLimit({
-      scoping: "scoped",
-      count: 10,
-      duration: 15000,
-    })
-  )
+  // .use(
+  //   rateLimit({
+  //     scoping: "scoped",
+  //     count: 10,
+  //     duration: 15000,
+  //   })
+  // )
   .post("/", async ({ body, cookie, set }) => {
     if (
-      !body?.password ||
+      !body?.password || body.password.length!==ADMIN_KEY.length ||
       !timingSafeEqual(Buffer.from(body.password), Buffer.from(ADMIN_KEY))
     ) {
       set.status = 401;
@@ -182,7 +184,7 @@ const auth = new Elysia({
   })
   .get("/logout", ({ cookie, redirect }) => {
     cookie["cap-admin-key"].remove();
-    return redirect("/");
+    return redirect(prefix+"/");
   });
 
 const internal = new Elysia({ prefix: "/internal" })
@@ -196,13 +198,13 @@ const internal = new Elysia({ prefix: "/internal" })
       };
     }
   })
-  .use(
-    rateLimit({
-      scoping: "scoped",
-      number: 60,
-      duration: 10000,
-    })
-  )
+  // .use(
+  //   rateLimit({
+  //     scoping: "scoped",
+  //     number: 60,
+  //     duration: 10000,
+  //   })
+  // )
   .post(
     "/createKey",
     async ({
@@ -344,13 +346,13 @@ const api = new Elysia({ prefix: "/:key" })
       origin: process.env.CORS_ORIGIN || true,
     })
   )
-  .use(
-    rateLimit({
-      scoping: "scoped",
-      number: 80,
-      duration: 1000,
-    })
-  )
+  // .use(
+  //   rateLimit({
+  //     scoping: "scoped",
+  //     number: 80,
+  //     duration: 1000,
+  //   })
+  // )
   .derive(({ params }) => {
     const keyData = keys.find((k) => k.publicKey === params.key);
     if (!keyData) {
@@ -397,24 +399,28 @@ const api = new Elysia({ prefix: "/:key" })
 const assetsServer = new Elysia({ prefix: "/assets" })
   .use(
     cors({
-      origin: process.env.CORS_ORIGIN || true,
+      origin: process.env.CORS_ORIGIN || true
     })
   )
   .get("/widget.js", ({ set }) => {
     set.headers["Content-Type"] = "text/javascript";
-    return file(path.join(dataDir, "assets-widget.js"));
+    set.headers["Cache-Control"] = "max-age=31536000";
+    return widgetSource ? widgetSource : file(path.join(dataDir, "assets-widget.js"));
   })
   .get("/floating.js", ({ set }) => {
     set.headers["Content-Type"] = "text/javascript";
-    return file(path.join(dataDir, "assets-floating.js"));
+    set.headers["Cache-Control"] = "max-age=31536000";
+    return floatingSource ? floatingSource : file(path.join(dataDir, "assets-floating.js"));
   })
   .get("/cap_wasm_bg.wasm", ({ set }) => {
     set.headers["Content-Type"] = "application/wasm";
-    return file(path.join(dataDir, "assets-cap_wasm_bg.wasm"));
+    set.headers["Cache-Control"] = "max-age=31536000";
+    return wasmSource ? wasmSource : file(path.join(dataDir, "assets-cap_wasm_bg.wasm"));
   })
   .get("/cap_wasm.js", ({ set }) => {
     set.headers["Content-Type"] = "text/javascript";
-    return file(path.join(dataDir, "assets-cap_wasm.js"));
+    set.headers["Cache-Control"] = "max-age=31536000";
+    return wasmLoaderSource ? wasmLoaderSource : file(path.join(dataDir, "assets-cap_wasm.js"));
   });
 
 new Elysia()

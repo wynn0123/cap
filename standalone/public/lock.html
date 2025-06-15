@@ -185,6 +185,7 @@
     </form>
   </body>
   <script>
+    const prefix = "/cap-api";
     document.querySelector("input").focus();
 
     document.querySelector("form").addEventListener("submit", async function (e) {
@@ -195,7 +196,7 @@
       document.querySelector("button[type=submit]").disabled = true;
 
       const { success } = await (
-        await fetch("/internal/auth", {
+        await fetch(prefix+"/internal/auth", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -208,7 +209,7 @@
 
       if (success) {
         document.querySelector("p.err").style.display = "none";
-        window.location.href = "/";
+        window.location.href = prefix+"/";
         return;
       }
 

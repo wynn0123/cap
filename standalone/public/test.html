@@ -75,7 +75,7 @@
         z-index: 1000;
       }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <div id="inputArea">
@@ -99,9 +99,10 @@
       <canvas id="progressChart"></canvas>
     </div>
 
-    <script src="/assets/widget.js"></script>
+    <script src="./assets/widget.js"></script>
 
     <script>
+      const prefix = "/cap-api";
       const logsElement = document.querySelector(".logs");
       const keyIdInput = document.getElementById("keyIdInput");
       const secretKeyInput = document.getElementById("secretKeyInput");
@@ -172,7 +173,7 @@
         log(`Solved successfully, validating token...`);
 
         const { success } = await (
-          await fetch(`/${keyId}/siteverify`, {
+          await fetch(`${prefix}/${keyId}/siteverify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
