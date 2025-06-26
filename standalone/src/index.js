@@ -65,17 +65,17 @@ const updateCache = async () => {
   try {
     [widgetSource, floatingSource, wasmSource, wasmLoaderSource] =
       await Promise.all([
-        fetch("https://fastly.jsdelivr.net/npm/@cap.js/widget@latest").then((r) =>
+        fetch("https://fastly.jsdelivr.net/npm/@cap.js/widget@0.1.18").then((r) =>
           r.text()
         ),
         fetch(
-          "https://fastly.jsdelivr.net/npm/@cap.js/widget/cap-floating.min.js"
+          "https://fastly.jsdelivr.net/npm/@cap.js/widget@0.1.18/cap-floating.min.js"
         ).then((r) => r.text()),
         fetch(
-          "https://fastly.jsdelivr.net/npm/@cap.js/wasm/browser/cap_wasm_bg.wasm"
+          "https://fastly.jsdelivr.net/npm/@cap.js/wasm@0.0.5/browser/cap_wasm_bg.wasm"
         ).then((r) => r.arrayBuffer()),
         fetch(
-          "https://fastly.jsdelivr.net/npm/@cap.js/wasm/browser/cap_wasm.min.js"
+          "https://fastly.jsdelivr.net/npm/@cap.js/wasm@0.0.5/browser/cap_wasm.min.js"
         ).then((r) => r.text()),
       ]);
 
